@@ -217,7 +217,7 @@ export default function App() {
 
   // Preferences State
   const [showParticles, setShowParticles] = useState(localStorage.getItem('particles') !== 'false')
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('athletik_onboarding_done') === 'false')
   
   // Meta Viewport Fix for Mobile
   useEffect(() => {
@@ -346,34 +346,27 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Sync Data
-  useEffect(() => {
-    if (session) {
-      fetchProfile()
-      fetchSeances()
-      if (!localStorage.getItem('onboarding_done')) setShowOnboarding(true)
-    }
-  }, [session])
-
-  const fetchProfile = async () => {
-    const { data } = await supabase.from('profils').select('*').eq('user_id', session.user.id).single()
-    if (data) {
-      setProfile(data)
-      if (data.couleur_principale) {
-        setPrimaryColor(data.couleur_principale)
-        localStorage.setItem('primaryColor', data.couleur_principale)
+  const fetchProfile = async (uid) => {
+    try {
+      const { data, error } = await supabase.from('profils').select('*').eq('user_id', uid).maybeSingle()
+      if (error) throw error
+      if (data) {
+        setProfile(data)
+        if (data.couleur_principale) {
+          setPrimaryColor(data.couleur_principale)
+          localStorage.setItem('primaryColor', data.couleur_principale)
+        }
+      } else {
+        const { data: newProf, error: insErr } = await supabase
+          .from('profils')
+          .insert([{ user_id: uid, couleur_principale: '#e63946', avatar: 'Dumbbell' }])
+          .select()
+          .single()
+        if (insErr) throw insErr
+        setProfile(newProf)
       }
-    } else {
-      const { data: newProf } = await supabase.from('profils').insert([{ user_id: session.user.id, couleur_principale: '#e63946' }]).select().single()
-      setProfile(newProf)
-    }
-  }
-
-  const fetchSeances = async () => {
-    const { data } = await supabase.from('seances').select('*').order('date', { ascending: false })
-    if (data) {
-      setSeances(data)
-      checkBadges(data)
+    } catch (err) {
+      console.error("Profile Error:", err.message)
     }
   }
 
@@ -386,6 +379,33 @@ export default function App() {
     if (distinctSports.size >= 3) unlocked.push("Polyvalent")
     setBadges(unlocked)
   }
+
+  const fetchSeances = async (uid) => {
+    try {
+      const { data, error } = await supabase
+        .from('seances')
+        .select('*')
+        .eq('user_id', uid)
+        .order('date', { ascending: false })
+      if (error) throw error
+      if (data) {
+        setSeances(data)
+        checkBadges(data)
+      }
+    } catch (err) {
+      console.error("Seances Error:", err.message)
+    }
+  }
+
+  // Sync Data
+  useEffect(() => {
+    if (session?.user?.id) {
+      const uid = session.user.id
+      fetchProfile(uid)
+      fetchSeances(uid)
+      if (localStorage.getItem('athletik_onboarding_done') === 'false') setShowOnboarding(true)
+    }
+  }, [session])
 
   const toggleParticles = () => {
     const val = !showParticles
@@ -418,7 +438,7 @@ export default function App() {
       <style>{getDynamicCss()}</style>
       <ParticlesBackground active={showParticles} primaryColor={primaryColor} />
       
-      {showOnboarding && <Onboarding onClose={() => { setShowOnboarding(false); localStorage.setItem('onboarding_done', 'true') }} pseudo={profile?.pseudo} />}
+      {showOnboarding && <Onboarding onClose={() => { setShowOnboarding(false); localStorage.setItem('athletik_onboarding_done', 'true') }} pseudo={profile?.pseudo} />}
 
       <button className="sparkles-btn" onClick={toggleParticles}><Sparkles size={20} /></button>
 
@@ -482,7 +502,11 @@ function Auth() {
     e.preventDefault()
     setLoading(true); setError(null)
     const { error: err } = isLogin ? await supabase.auth.signInWithPassword({ email, password }) : await supabase.auth.signUp({ email, password })
-    if (err) setError(err.message)
+    if (err) {
+      setError(err.message)
+    } else if (!isLogin) {
+      localStorage.setItem('athletik_onboarding_done', 'false')
+    }
     setLoading(false)
   }
 
@@ -542,7 +566,7 @@ function Home({ seances, onNavigate }) {
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}><Dumbbell size={16} color="var(--color-primary)" /><h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', fontFamily: 'Inter' }}>{s.titre}</h3></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: DEFAULT_THEME.textMuted, fontSize: '12px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14}/> {new Date(s.date).toLocaleDateString()}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14}/> {s.date ? new Date(s.date).toLocaleDateString() : 'Date...'}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14}/> {s.duree_minutes} min</span>
               </div>
             </div>
@@ -604,7 +628,7 @@ function SeanceDetail({ seance, onBack, onDelete, navigate, primaryColor }) {
       </div>
       <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '16px', borderRadius: '12px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 'bold' }}><Flame size={16} color="var(--color-primary)"/> {seance.sport}</div>
-        <div style={{ display: 'flex', gap: '15px', color: DEFAULT_THEME.textMuted, fontSize: '13px' }}><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14}/> {new Date(seance.date).toLocaleDateString()}</span><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14}/> {seance.duree_minutes} min</span></div>
+        <div style={{ display: 'flex', gap: '15px', color: DEFAULT_THEME.textMuted, fontSize: '13px' }}><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14}/> {seance.date ? new Date(seance.date).toLocaleDateString() : 'Date...'}</span><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14}/> {seance.duree_minutes} min</span></div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}><h3 className="bebas" style={{ margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}><Dumbbell size={18} color="var(--color-primary)"/> EXERCICES</h3><button className="btn-primary" style={{ width: 'auto', padding: '6px 12px', marginTop: 0 }} onClick={() => navigate('add_exercice', {seanceId: seance.id})}><Plus size={16}/></button></div>
       <div className="grid-responsive" style={{ marginBottom: '30px' }}>
@@ -918,6 +942,29 @@ function Profile({ profile, seances, badges, onUpdate, primaryColor }) {
           <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}><h3 className="bebas" style={{ margin: '0 0 15px 0', fontSize: '20px' }}>STATS EXPRESS</h3><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #333', fontSize: '14px' }}><span>Séances</span><strong>{seances.length}</strong></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #333', fontSize: '14px' }}><span>Minutes</span><strong>{seances.reduce((acc, s) => acc + s.duree_minutes, 0)}</strong></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px' }}><span>Streak max (est.)</span><strong>{badges.includes("Régularité") ? "7 jrs" : "1 jr"}</strong></div></div>
         </div>
       </div>
+
+      <button 
+        onClick={() => supabase.auth.signOut()}
+        style={{
+          width: '100%',
+          padding: '14px',
+          marginTop: '32px',
+          background: 'transparent',
+          border: '1px solid #e63946',
+          borderRadius: '12px',
+          color: '#e63946',
+          fontSize: '15px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px'
+        }}
+      >
+        <LogOut size={18} />
+        Se déconnecter
+      </button>
     </div>
   )
 }
