@@ -7,7 +7,7 @@ import {
   Crown, Target, Sword, Sparkles, User, Timer, 
   BarChart2, Search, Play, Pause, Square, Frown, 
   Meh, Smile, Laugh, X, Medal, Home as HomeIcon,
-  Volume2, VolumeX, Bell
+  Volume2, VolumeX, Bell, WifiOff
 } from 'lucide-react'
 
 // ==========================================
@@ -120,82 +120,7 @@ function ParticlesBackground({ active, primaryColor }) {
   return <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0, pointerEvents: 'none' }} />
 }
 
-// ==========================================
-// 3. SOUND (WEB AUDIO)
-// ==========================================
-const playBeep = (type) => {
-  const AudioCtx = window.AudioContext || window.webkitAudioContext
-  if (!AudioCtx) return // Safari/old browsers fallback
-  const ctx = new AudioCtx()
-  const oscillator = ctx.createOscillator()
-  const gainNode = ctx.createGain()
-  
-  oscillator.connect(gainNode)
-  gainNode.connect(ctx.destination)
-  
-  if (type === 'round_end') {
-    oscillator.frequency.setValueAtTime(880, ctx.currentTime)
-    gainNode.gain.setValueAtTime(0.8, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2)
-    oscillator.start(ctx.currentTime)
-    oscillator.stop(ctx.currentTime + 1.2)
-  }
-  
-  if (type === 'rest_end') {
-    oscillator.frequency.setValueAtTime(660, ctx.currentTime)
-    gainNode.gain.setValueAtTime(0.6, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
-    oscillator.start(ctx.currentTime)
-    oscillator.stop(ctx.currentTime + 0.15)
-    
-    const osc2 = ctx.createOscillator()
-    const gain2 = ctx.createGain()
-    osc2.connect(gain2)
-    gain2.connect(ctx.destination)
-    osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.2)
-    gain2.gain.setValueAtTime(0.6, ctx.currentTime + 0.2)
-    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
-    osc2.start(ctx.currentTime + 0.2)
-    osc2.stop(ctx.currentTime + 0.5)
-  }
-  
-  if (type === 'countdown') {
-    oscillator.frequency.setValueAtTime(440, ctx.currentTime)
-    gainNode.gain.setValueAtTime(0.4, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
-    oscillator.start(ctx.currentTime)
-    oscillator.stop(ctx.currentTime + 0.1)
-  }
-  
-  if (type === 'session_end') {
-    const notes = [523, 659, 784, 1047]
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.18)
-      gain.gain.setValueAtTime(0.5, ctx.currentTime + i * 0.18)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.18 + 0.3)
-      osc.start(ctx.currentTime + i * 0.18)
-      osc.stop(ctx.currentTime + i * 0.18 + 0.3)
-    })
-  }
-  
-  if (type === 'minuteur_end') {
-    [0, 0.35, 0.7].forEach(delay => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.setValueAtTime(1000, ctx.currentTime + delay)
-      gain.gain.setValueAtTime(0.9, ctx.currentTime + delay)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.25)
-      osc.start(ctx.currentTime + delay)
-      osc.stop(ctx.currentTime + delay + 0.25)
-    })
-  }
-}
+// Cloche de boxe (audio context native + bell.mp3)
 
 // ==========================================
 // 4. MAIN APP ROUTER & LOGIC
@@ -218,6 +143,22 @@ export default function App() {
   // Preferences State
   const [showParticles, setShowParticles] = useState(localStorage.getItem('particles') !== 'false')
   const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('athletik_onboarding_done') === 'false')
+  
+  // PWA & Offline State
+  const [offlineMode, setOfflineMode] = useState(false)
+  
+  // Notification States
+  const [remindersEnabled, setRemindersEnabled] = useState(localStorage.getItem('athletik_reminders') === 'true')
+  const [reminderTime, setReminderTime] = useState(localStorage.getItem('athletik_reminder_time') || '18:00')
+  const [reminderDays, setReminderDays] = useState(() => JSON.parse(localStorage.getItem('athletik_reminder_days') || '[1,2,3,4,5]'))
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission()
+      return permission === 'granted'
+    }
+    return false
+  }
   
   // Meta Viewport Fix for Mobile
   useEffect(() => {
@@ -337,6 +278,14 @@ export default function App() {
       position: fixed; bottom: 80px; right: 16px; z-index: 100; background: #1c1c1c; border: 1px solid var(--color-primary); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: ${shadow(primaryColor, 0.4)}; transition: transform 0.2s; color: var(--color-primary);
     }
     @media (min-width: 768px) { .sparkles-btn { bottom: 16px; } }
+
+    @keyframes bellShake {
+      0%   { transform: rotate(0deg); }
+      25%  { transform: rotate(15deg); }
+      50%  { transform: rotate(0deg); }
+      75%  { transform: rotate(-15deg); }
+      100% { transform: rotate(0deg); }
+    }
   `
 
   // Init Auth
@@ -391,11 +340,53 @@ export default function App() {
       if (data) {
         setSeances(data)
         checkBadges(data)
+        localStorage.setItem('athletik_seances_cache', JSON.stringify(data))
       }
     } catch (err) {
       console.error("Seances Error:", err.message)
+      const cache = localStorage.getItem('athletik_seances_cache')
+      if (cache) {
+        setSeances(JSON.parse(cache))
+        setOfflineMode(true)
+      }
     }
   }
+
+  // Mode Hors-ligne
+  useEffect(() => {
+    const handleOnline = () => {
+      setOfflineMode(false)
+      if (session?.user?.id) fetchSeances(session.user.id)
+    }
+    const handleOffline = () => setOfflineMode(true)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    if (!navigator.onLine) setOfflineMode(true)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [session])
+
+  // Rappels
+  useEffect(() => {
+    if (!remindersEnabled) return
+    const checkReminder = () => {
+      const now = new Date()
+      const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+      const currentDay = now.getDay()
+      if (currentTime === reminderTime && reminderDays.includes(currentDay)) {
+        if (Notification.permission === 'granted') {
+          new Notification('Athlétik 💪', {
+            body: 'C\'est l\'heure de t\'entraîner ! Bonne séance.',
+            icon: '/icon.svg'
+          })
+        }
+      }
+    }
+    const interval = setInterval(checkReminder, 60000)
+    return () => clearInterval(interval)
+  }, [remindersEnabled, reminderTime, reminderDays])
 
   // Sync Data
   useEffect(() => {
@@ -438,6 +429,12 @@ export default function App() {
       <style>{getDynamicCss()}</style>
       <ParticlesBackground active={showParticles} primaryColor={primaryColor} />
       
+      {offlineMode && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: '#ff6b35', color: '#fff', textAlign: 'center', padding: '8px', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <WifiOff size={16} /> Mode hors-ligne — données en cache
+        </div>
+      )}
+
       {showOnboarding && <Onboarding onClose={() => { setShowOnboarding(false); localStorage.setItem('athletik_onboarding_done', 'true') }} pseudo={profile?.pseudo} />}
 
       <button className="sparkles-btn" onClick={toggleParticles}><Sparkles size={20} /></button>
@@ -470,7 +467,22 @@ export default function App() {
           {view === 'create_seance' && <CreateSeance userId={session.user.id} onBack={() => navigate('home')} onCreated={fetchSeances} navigate={navigate} />}
           {view === 'seance_detail' && <SeanceDetail seance={navData.seance} onBack={() => navigate('home')} onDelete={fetchSeances} navigate={navigate} primaryColor={primaryColor} />}
           {view === 'add_exercice' && <AddExercice seanceId={navData.seanceId} onBack={() => navigate('seance_detail', {seance: navData.seance})} primaryColor={primaryColor} />}
-          {view === 'profile' && <Profile profile={profile} seances={seances} badges={badges} onUpdate={fetchProfile} primaryColor={primaryColor} />}
+          {view === 'profile' && (
+            <Profile 
+              profile={profile} 
+              seances={seances} 
+              badges={badges} 
+              onUpdate={fetchProfile} 
+              primaryColor={primaryColor}
+              remindersEnabled={remindersEnabled}
+              setRemindersEnabled={setRemindersEnabled}
+              reminderTime={reminderTime}
+              setReminderTime={setReminderTime}
+              reminderDays={reminderDays}
+              setReminderDays={setReminderDays}
+              requestNotificationPermission={requestNotificationPermission}
+            />
+          )}
           {view === 'stats' && <Stats seances={seances} />}
           {view === 'timer' && <TimerView />}
           {view === 'active_session' && <ActiveSession seance={navData.seance} onFinish={() => navigate('seance_detail', {seance: navData.seance})} primaryColor={primaryColor} />}
@@ -711,6 +723,59 @@ function TimerView() {
   const roundRef = useRef(1)
   const soundEnabledRef = useRef(true)
   const lastBeepSecRef = useRef(-1)
+  const bellRef = useRef(null)
+  const bellLoopRef = useRef(null)
+  const [bellRinging, setBellRinging] = useState(false)
+
+  // Initialiser l'audio une seule fois
+  useEffect(() => {
+    bellRef.current = new Audio('/bell.mp3')
+    bellRef.current.load()
+    return () => stopBell()
+  }, [])
+
+  const stopBell = () => {
+    if (bellLoopRef.current) {
+      clearInterval(bellLoopRef.current)
+      bellLoopRef.current = null
+    }
+    if (bellRef.current) {
+      bellRef.current.pause()
+      bellRef.current.currentTime = 0
+    }
+    setBellRinging(false)
+  }
+
+  const startBell = () => {
+    if (!soundEnabledRef.current) return
+    if (!bellRef.current) return
+    setBellRinging(true)
+    const playOnce = () => {
+      bellRef.current.currentTime = 0
+      bellRef.current.play().catch(() => {})
+    }
+    playOnce()
+    // Répéter toutes les 2 secondes
+    bellLoopRef.current = setInterval(playOnce, 2000)
+  }
+
+  const playBeep = (type) => {
+    if (!soundEnabledRef.current) return
+    if (type === 'countdown') {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      oscillator.frequency.setValueAtTime(880, ctx.currentTime)
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.1)
+    } else {
+      startBell()
+    }
+  }
 
   // ---- STATES (seulement pour l'affichage) ----
   const [displayMs, setDisplayMs] = useState(0)
@@ -901,11 +966,25 @@ function TimerView() {
         )}
         <button onClick={handleReset} style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#333', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Square size={22}/></button>
       </div>
+
+      {bellRinging && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+          <div style={{ fontSize: 80, animation: 'bellShake 0.5s infinite' }}>🔔</div>
+          <p style={{ color: '#fff', fontFamily: 'Bebas Neue, sans-serif', fontSize: 32, margin: 0, letterSpacing: 2 }}>{chronoMode === 'rounds' ? 'FIN DU ROUND' : 'TEMPS ÉCOULÉ'}</p>
+          <button onClick={stopBell} style={{ padding: '16px 48px', background: 'linear-gradient(135deg, var(--color-primary), #ff6b35)', border: 'none', borderRadius: 12, color: '#fff', fontFamily: 'Bebas Neue, sans-serif', fontSize: 24, letterSpacing: 2, cursor: 'pointer', boxShadow: '0 4px 24px rgba(230,57,70,0.5)', marginTop: 8 }}>ARRÊTER</button>
+          <p style={{ color: '#888', fontSize: 13, margin: 0 }}>Appuie pour continuer</p>
+        </div>
+      )}
+    </div>
     </div>
   )
 }
 
-function Profile({ profile, seances, badges, onUpdate, primaryColor }) {
+function Profile({ 
+  profile, seances, badges, onUpdate, primaryColor,
+  remindersEnabled, setRemindersEnabled, reminderTime, setReminderTime,
+  reminderDays, setReminderDays, requestNotificationPermission
+}) {
   const [formData, setFormData] = useState(profile || {})
   const [saving, setSaving] = useState(false)
   const sports = ["MMA", "Boxe", "Muay Thaï", "Lutte", "BJJ", "Musculation", "Cardio", "Autre"]
@@ -940,6 +1019,71 @@ function Profile({ profile, seances, badges, onUpdate, primaryColor }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}><h3 className="bebas" style={{ margin: '0 0 15px 0', fontSize: '20px' }}>MES BADGES</h3><div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>{badges.length === 0 ? <p style={{ color: DEFAULT_THEME.textMuted, fontSize: '13px', margin: 0 }}>Aucun badge.</p> : badges.map(b => <div key={b} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', backgroundColor: '#333', padding: '10px', borderRadius: '10px', width: '70px', boxShadow: shadow(primaryColor, 0.2) }}><Medal size={24} color="var(--color-primary)" /><span style={{ fontSize: '10px', fontWeight: 'bold', textAlign: 'center' }}>{b}</span></div>)}</div></div>
           <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}><h3 className="bebas" style={{ margin: '0 0 15px 0', fontSize: '20px' }}>STATS EXPRESS</h3><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #333', fontSize: '14px' }}><span>Séances</span><strong>{seances.length}</strong></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #333', fontSize: '14px' }}><span>Minutes</span><strong>{seances.reduce((acc, s) => acc + s.duree_minutes, 0)}</strong></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px' }}><span>Streak max (est.)</span><strong>{badges.includes("Régularité") ? "7 jrs" : "1 jr"}</strong></div></div>
+          
+          <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h3 className="bebas" style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}><Bell size={20} color="var(--color-primary)" /> RAPPELS</h3>
+              <div 
+                onClick={async () => {
+                  const val = !remindersEnabled
+                  if (val) {
+                    const granted = await requestNotificationPermission()
+                    if (!granted) return
+                  }
+                  setRemindersEnabled(val)
+                  localStorage.setItem('athletik_reminders', val)
+                }} 
+                style={{ width: '40px', height: '22px', backgroundColor: remindersEnabled ? 'var(--color-primary)' : '#333', borderRadius: '11px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}
+              >
+                <div style={{ width: '16px', height: '16px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: remindersEnabled ? '21px' : '3px', transition: '0.3s shadow, 0.3s left' }} />
+              </div>
+            </div>
+            {remindersEnabled && (
+              <div style={{ animation: 'fadeInUp 0.3s' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: DEFAULT_THEME.textMuted }}>Heure de rappel</label>
+                <input 
+                  type="time" 
+                  value={reminderTime} 
+                  onChange={e => { setReminderTime(e.target.value); localStorage.setItem('athletik_reminder_time', e.target.value) }} 
+                  className="input-field" 
+                  style={{ padding: '8px', marginBottom: '15px' }} 
+                />
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: DEFAULT_THEME.textMuted }}>Jours sélectionnés</label>
+                <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>
+                  {['D','L','M','M','J','V','S'].map((d, i) => {
+                    const sel = reminderDays.includes(i)
+                    return (
+                      <button 
+                        key={i} 
+                        type="button"
+                        onClick={() => {
+                          const newDays = sel ? reminderDays.filter(day => day !== i) : [...reminderDays, i]
+                          setReminderDays(newDays)
+                          localStorage.setItem('athletik_reminder_days', JSON.stringify(newDays))
+                        }}
+                        style={{ flex: 1, padding: '10px 0', borderRadius: '8px', border: 'none', backgroundColor: sel ? 'var(--color-primary)' : '#333', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+                      >
+                        {d}
+                      </button>
+                    )
+                  })}
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => {
+                   if (Notification.permission === 'granted') {
+                      new Notification('Athlétik 💪', { body: 'C\'est l\'heure de t\'entraîner !', icon: '/icon.svg', badge: '/icon.svg' })
+                   } else {
+                      alert('Veuillez autoriser les notifications dans votre navigateur.')
+                   }
+                  }}
+                  style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid #333', color: '#fff', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
+                >
+                  <Zap size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Tester la notification
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
