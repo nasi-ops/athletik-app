@@ -723,41 +723,38 @@ function TimerView() {
   const phaseRef = useRef('round')
   const roundRef = useRef(1)
   const soundEnabledRef = useRef(true)
-  const lastBeepSecRef = useRef(-1)
-  const bellRef = useRef(null)
   const bellLoopRef = useRef(null)
   const [bellRinging, setBellRinging] = useState(false)
 
-  // Initialiser l'audio une seule fois
+  // Cleanup
   useEffect(() => {
-    bellRef.current = new Audio('/bell.mp3')
-    bellRef.current.load()
     return () => stopBell()
   }, [])
+
+  const playBell = () => {
+    if (!soundEnabledRef.current) return
+    try {
+      const audio = new Audio('/bell.mp3')
+      audio.volume = 1.0
+      audio.play().catch(err => console.log('Audio error:', err))
+    } catch(e) {
+      console.log('Bell error:', e)
+    }
+  }
+
+  const playBellLoop = () => {
+    if (!soundEnabledRef.current) return
+    setBellRinging(true)
+    playBell()
+    bellLoopRef.current = setInterval(playBell, 2500)
+  }
 
   const stopBell = () => {
     if (bellLoopRef.current) {
       clearInterval(bellLoopRef.current)
       bellLoopRef.current = null
     }
-    if (bellRef.current) {
-      bellRef.current.pause()
-      bellRef.current.currentTime = 0
-    }
     setBellRinging(false)
-  }
-
-  const startBell = () => {
-    if (!soundEnabledRef.current) return
-    if (!bellRef.current) return
-    setBellRinging(true)
-    const playOnce = () => {
-      bellRef.current.currentTime = 0
-      bellRef.current.play().catch(() => { })
-    }
-    playOnce()
-    // Répéter toutes les 2 secondes
-    bellLoopRef.current = setInterval(playOnce, 2000)
   }
 
   const playBeep = (type) => {
@@ -774,7 +771,7 @@ function TimerView() {
       oscillator.start(ctx.currentTime)
       oscillator.stop(ctx.currentTime + 0.1)
     } else {
-      startBell()
+      playBellLoop()
     }
   }
 
@@ -922,9 +919,12 @@ function TimerView() {
     <div style={{ textAlign: 'center', animation: 'fadeInUp 0.4s ease-out' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
         <h1 className="bebas title-main" style={{ margin: 0 }}>CHRONOMÈTRE</h1>
-        <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ background: 'none', border: 'none', color: soundEnabled ? 'var(--color-primary)' : '#555', cursor: 'pointer' }}>
-          {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button onClick={playBell} style={{ padding: '8px 16px', background: '#1c1c1c', border: '1px solid var(--color-primary)', borderRadius: 8, color: 'var(--color-primary)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 'bold' }}><Volume2 size={14} /> TEST</button>
+          <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ background: 'none', border: 'none', color: soundEnabled ? 'var(--color-primary)' : '#555', cursor: 'pointer' }}>
+            {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '25px', overflowX: 'auto', paddingBottom: '10px' }}>
