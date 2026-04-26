@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from './supabase'
-import { 
-  Dumbbell, Plus, Calendar, Clock, ChevronRight, 
-  Trash2, LogOut, ArrowLeft, Flame, Trophy, 
-  RotateCcw, Weight, Pencil, Zap, Shield, Star, 
-  Crown, Target, Sword, Sparkles, User, Timer, 
-  BarChart2, Search, Play, Pause, Square, Frown, 
+import {
+  Dumbbell, Plus, Calendar, Clock, ChevronRight,
+  Trash2, LogOut, ArrowLeft, Flame, Trophy,
+  RotateCcw, Weight, Pencil, Zap, Shield, Star,
+  Crown, Target, Sword, Sparkles, User, Timer,
+  BarChart2, Search, Play, Pause, Square, Frown,
   Meh, Smile, Laugh, X, Medal, Home as HomeIcon,
   Volume2, VolumeX, Bell, WifiOff
 } from 'lucide-react'
@@ -15,15 +15,15 @@ import {
 // ==========================================
 const hexToRgba = (hex, opacity) => {
   hex = hex.replace('#', '')
-  if (hex.length === 3) hex = hex.split('').map(c => c+c).join('')
-  const r = parseInt(hex.slice(0,2), 16) || 230
-  const g = parseInt(hex.slice(2,4), 16) || 57
-  const b = parseInt(hex.slice(4,6), 16) || 70
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('')
+  const r = parseInt(hex.slice(0, 2), 16) || 230
+  const g = parseInt(hex.slice(2, 4), 16) || 57
+  const b = parseInt(hex.slice(4, 6), 16) || 70
   return `rgba(${r},${g},${b},${opacity})`
 }
 
 const adjustColor = (colorCode, amount = 20) => {
-  return '#' + colorCode.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+  return '#' + colorCode.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
 }
 
 const shadow = (color, opacity = 0.4) => `0 4px 24px ${hexToRgba(color, opacity)}`
@@ -65,7 +65,7 @@ function ParticlesBackground({ active, primaryColor }) {
     }))
 
     let mouse = { x: -999, y: -999 }
-    
+
     const onMouseMove = (e) => {
       mouse.x = e.clientX
       mouse.y = e.clientY
@@ -75,40 +75,40 @@ function ParticlesBackground({ active, primaryColor }) {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       const color = primaryColor || '#e63946'
-      
+
       particles.forEach(p => {
         const dx = mouse.x - p.x
         const dy = mouse.y - p.y
-        const dist = Math.sqrt(dx*dx + dy*dy)
-        
+        const dist = Math.sqrt(dx * dx + dy * dy)
+
         if (dist < 120) {
           p.x += dx * 0.015
           p.y += dy * 0.015
         }
-        
+
         p.x += p.vx
         p.y += p.vy
-        
+
         if (p.x < 0 || p.x > canvas.width) p.vx *= -1
         if (p.y < 0 || p.y > canvas.height) p.vy *= -1
-        
+
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
         ctx.fillStyle = color + Math.floor(p.opacity * 255).toString(16).padStart(2, '0')
         ctx.fill()
       })
-      
+
       animRef.current = requestAnimationFrame(animate)
     }
-    
+
     animate()
-    
+
     const onResize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
     }
     window.addEventListener('resize', onResize)
-    
+
     return () => {
       cancelAnimationFrame(animRef.current)
       window.removeEventListener('mousemove', onMouseMove)
@@ -128,14 +128,14 @@ function ParticlesBackground({ active, primaryColor }) {
 export default function App() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
-  
+
   const [primaryColor, setPrimaryColor] = useState(localStorage.getItem('primaryColor') || '#e63946')
-  
+
   // Navigation State
   const [view, setView] = useState('home')
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [navData, setNavData] = useState({})
-  
+
   // Data State
   const [seances, setSeances] = useState([])
   const [badges, setBadges] = useState([])
@@ -143,10 +143,10 @@ export default function App() {
   // Preferences State
   const [showParticles, setShowParticles] = useState(localStorage.getItem('particles') !== 'false')
   const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('athletik_onboarding_done') === 'false')
-  
+
   // PWA & Offline State
   const [offlineMode, setOfflineMode] = useState(false)
-  
+
   // Notification States
   const [remindersEnabled, setRemindersEnabled] = useState(localStorage.getItem('athletik_reminders') === 'true')
   const [reminderTime, setReminderTime] = useState(localStorage.getItem('athletik_reminder_time') || '18:00')
@@ -159,7 +159,7 @@ export default function App() {
     }
     return false
   }
-  
+
   // Meta Viewport Fix for Mobile
   useEffect(() => {
     let meta = document.querySelector('meta[name=viewport]')
@@ -373,7 +373,7 @@ export default function App() {
     if (!remindersEnabled) return
     const checkReminder = () => {
       const now = new Date()
-      const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
       const currentDay = now.getDay()
       if (currentTime === reminderTime && reminderDays.includes(currentDay)) {
         if (Notification.permission === 'granted') {
@@ -410,7 +410,7 @@ export default function App() {
     setTimeout(() => {
       setView(newView)
       setIsTransitioning(false)
-      window.scrollTo(0,0)
+      window.scrollTo(0, 0)
     }, 250)
   }
 
@@ -428,7 +428,7 @@ export default function App() {
     <>
       <style>{getDynamicCss()}</style>
       <ParticlesBackground active={showParticles} primaryColor={primaryColor} />
-      
+
       {offlineMode && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: '#ff6b35', color: '#fff', textAlign: 'center', padding: '8px', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
           <WifiOff size={16} /> Mode hors-ligne — données en cache
@@ -466,13 +466,13 @@ export default function App() {
           {view === 'home' && <Home seances={seances} onNavigate={navigate} />}
           {view === 'create_seance' && <CreateSeance userId={session.user.id} onBack={() => navigate('home')} onCreated={fetchSeances} navigate={navigate} />}
           {view === 'seance_detail' && <SeanceDetail seance={navData.seance} onBack={() => navigate('home')} onDelete={fetchSeances} navigate={navigate} primaryColor={primaryColor} />}
-          {view === 'add_exercice' && <AddExercice seanceId={navData.seanceId} onBack={() => navigate('seance_detail', {seance: navData.seance})} primaryColor={primaryColor} />}
+          {view === 'add_exercice' && <AddExercice seanceId={navData.seanceId} onBack={() => navigate('seance_detail', { seance: navData.seance })} primaryColor={primaryColor} />}
           {view === 'profile' && (
-            <Profile 
-              profile={profile} 
-              seances={seances} 
-              badges={badges} 
-              onUpdate={fetchProfile} 
+            <Profile
+              profile={profile}
+              seances={seances}
+              badges={badges}
+              onUpdate={fetchProfile}
               primaryColor={primaryColor}
               remindersEnabled={remindersEnabled}
               setRemindersEnabled={setRemindersEnabled}
@@ -485,7 +485,7 @@ export default function App() {
           )}
           {view === 'stats' && <Stats seances={seances} />}
           {view === 'timer' && <TimerView />}
-          {view === 'active_session' && <ActiveSession seance={navData.seance} onFinish={() => navigate('seance_detail', {seance: navData.seance})} primaryColor={primaryColor} />}
+          {view === 'active_session' && <ActiveSession seance={navData.seance} onFinish={() => navigate('seance_detail', { seance: navData.seance })} primaryColor={primaryColor} />}
         </main>
       </div>
     </>
@@ -525,7 +525,7 @@ function Auth() {
   return (
     <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100vh', boxSizing: 'border-box' }}>
       <div style={{ textAlign: 'center', marginBottom: '40px', animation: 'fadeIn 0.8s' }}>
-        <Trophy size={56} color="var(--color-primary)" style={{ marginBottom: '10px' }}/>
+        <Trophy size={56} color="var(--color-primary)" style={{ marginBottom: '10px' }} />
         <h1 className="bebas" style={{ margin: 0, fontSize: '48px', color: '#fff' }}>ATHLÉTIK</h1>
       </div>
       <div style={{ backgroundColor: DEFAULT_THEME.card, borderRadius: '16px', padding: '30px', animation: 'slideUp 0.5s ease-out' }}>
@@ -533,7 +533,7 @@ function Auth() {
         <form onSubmit={handleAuth}>
           <input type="email" className="input-field" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
           <input type="password" className="input-field" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} required />
-          {error && <p style={{color: 'var(--color-primary)', fontSize: '14px', marginBottom: '10px'}}>{error}</p>}
+          {error && <p style={{ color: 'var(--color-primary)', fontSize: '14px', marginBottom: '10px' }}>{error}</p>}
           <button className="btn-primary" type="submit" disabled={loading}>
             <Flame size={20} /> {loading ? 'Chargement...' : (isLogin ? 'Se connecter' : 'S\'inscrire')}
           </button>
@@ -569,17 +569,17 @@ function Home({ seances, onNavigate }) {
       </div>
       <div style={{ position: 'relative', marginBottom: '20px' }}>
         <Search size={18} color="#555" style={{ position: 'absolute', top: '14px', left: '12px' }} />
-        <input type="text" placeholder="Rechercher une séance..." value={search} onChange={e=>setSearch(e.target.value)} className="input-field" style={{ paddingLeft: '40px', marginBottom: 0 }} />
+        <input type="text" placeholder="Rechercher une séance..." value={search} onChange={e => setSearch(e.target.value)} className="input-field" style={{ paddingLeft: '40px', marginBottom: 0 }} />
       </div>
       <button className="btn-primary btn-pulse" onClick={() => onNavigate('create_seance')} style={{ marginBottom: '25px' }}><Plus size={20} /> Nouvelle Séance</button>
       <div className="grid-responsive">
         {filtered.map((s, i) => (
-          <div key={s.id} className="seance-card" style={{ display: 'flex', animation: `fadeInUp 0.4s ease-out forwards ${i * 0.05}s` }} onClick={() => onNavigate('seance_detail', {seance: s})}>
+          <div key={s.id} className="seance-card" style={{ display: 'flex', animation: `fadeInUp 0.4s ease-out forwards ${i * 0.05}s` }} onClick={() => onNavigate('seance_detail', { seance: s })}>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}><Dumbbell size={16} color="var(--color-primary)" /><h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', fontFamily: 'Inter' }}>{s.titre}</h3></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: DEFAULT_THEME.textMuted, fontSize: '12px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14}/> {s.date ? new Date(s.date).toLocaleDateString() : 'Date...'}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14}/> {s.duree_minutes} min</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14} /> {s.date ? new Date(s.date).toLocaleDateString() : 'Date...'}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> {s.duree_minutes} min</span>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -617,8 +617,9 @@ function CreateSeance({ userId, onBack, onCreated, navigate }) {
 function SeanceDetail({ seance, onBack, onDelete, navigate, primaryColor }) {
   const [exercices, setExercices] = useState([]); const [note, setNote] = useState(''); const [mood, setMood] = useState(null); const [savingNote, setSavingNote] = useState(false); const [editingEx, setEditingEx] = useState(null)
   useEffect(() => {
-    if (seance) { fetchExercices(); setNote(seance?.notes || '')
-      if (seance?.notes && seance.notes.startsWith('Mood:')) { const match = seance.notes.match(/Mood:\s(\d)\s\|\s(.*)/); if(match) { setMood(parseInt(match[1])); setNote(match[2]) } }
+    if (seance) {
+      fetchExercices(); setNote(seance?.notes || '')
+      if (seance?.notes && seance.notes.startsWith('Mood:')) { const match = seance.notes.match(/Mood:\s(\d)\s\|\s(.*)/); if (match) { setMood(parseInt(match[1])); setNote(match[2]) } }
     }
   }, [seance])
   const fetchExercices = async () => { const { data } = await supabase.from('exercices').select('*').eq('seance_id', seance.id).order('created_at', { ascending: true }); if (data) setExercices(data) }
@@ -634,26 +635,26 @@ function SeanceDetail({ seance, onBack, onDelete, navigate, primaryColor }) {
           <h2 className="bebas title-main" style={{ margin: 0, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{seance.titre}</h2>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => navigate('active_session', {seance})} style={{ backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 'bold' }}><Play size={16}/><span className="desktop-only" style={{ '@media (max-width: 480px)': { display: 'none' }}}>Start</span></button>
+          <button onClick={() => navigate('active_session', { seance })} style={{ backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 'bold' }}><Play size={16} /><span className="desktop-only" style={{ '@media (max-width: 480px)': { display: 'none' } }}>Start</span></button>
           <button onClick={handleDelete} style={{ background: 'rgba(255, 77, 79, 0.1)', color: '#ff4d4f', border: '1px solid #ff4d4f', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Trash2 size={16} /></button>
         </div>
       </div>
       <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '16px', borderRadius: '12px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 'bold' }}><Flame size={16} color="var(--color-primary)"/> {seance.sport}</div>
-        <div style={{ display: 'flex', gap: '15px', color: DEFAULT_THEME.textMuted, fontSize: '13px' }}><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14}/> {seance.date ? new Date(seance.date).toLocaleDateString() : 'Date...'}</span><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14}/> {seance.duree_minutes} min</span></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 'bold' }}><Flame size={16} color="var(--color-primary)" /> {seance.sport}</div>
+        <div style={{ display: 'flex', gap: '15px', color: DEFAULT_THEME.textMuted, fontSize: '13px' }}><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> {seance.date ? new Date(seance.date).toLocaleDateString() : 'Date...'}</span><span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> {seance.duree_minutes} min</span></div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}><h3 className="bebas" style={{ margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}><Dumbbell size={18} color="var(--color-primary)"/> EXERCICES</h3><button className="btn-primary" style={{ width: 'auto', padding: '6px 12px', marginTop: 0 }} onClick={() => navigate('add_exercice', {seanceId: seance.id})}><Plus size={16}/></button></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}><h3 className="bebas" style={{ margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}><Dumbbell size={18} color="var(--color-primary)" /> EXERCICES</h3><button className="btn-primary" style={{ width: 'auto', padding: '6px 12px', marginTop: 0 }} onClick={() => navigate('add_exercice', { seanceId: seance.id })}><Plus size={16} /></button></div>
       <div className="grid-responsive" style={{ marginBottom: '30px' }}>
         {exercices.map((e, index) => (
           <div key={e.id} style={{ display: 'block', animation: `fadeInUp 0.4s ease-out forwards ${index * 0.1}s` }}>
-            {editingEx === e.id ? <EditExerciceForm exercice={e} onSave={() => {setEditingEx(null); fetchExercices()}} onCancel={() => setEditingEx(null)} primaryColor={primaryColor} /> : 
+            {editingEx === e.id ? <EditExerciceForm exercice={e} onSave={() => { setEditingEx(null); fetchExercices() }} onCancel={() => setEditingEx(null)} primaryColor={primaryColor} /> :
               <div className="seance-card" style={{ display: 'block', opacity: 1, animation: 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}><h4 style={{ margin: 0, fontSize: '15px', fontFamily: 'Inter' }}>{e.nom}</h4><div style={{ display: 'flex', gap: '10px' }}><button style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', padding: 0 }} onClick={() => setEditingEx(e.id)}><Pencil size={14} /></button><button style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', padding: 0 }} onClick={async () => { await supabase.from('exercices').delete().eq('id', e.id); fetchExercices() }}><Trash2 size={14} /></button></div></div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '12px', color: '#ccc' }}>
-                  {e.series && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><RotateCcw size={10}/> {e.series} x {e.repetitions}</span>}
-                  {e.poids_kg && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Weight size={10}/> {e.poids_kg} kg</span>}
-                  {e.rounds && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><RotateCcw size={10}/> {e.rounds} rnds</span>}
-                  {e.duree_secondes && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={10}/> {e.duree_secondes} s</span>}
+                  {e.series && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><RotateCcw size={10} /> {e.series} x {e.repetitions}</span>}
+                  {e.poids_kg && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Weight size={10} /> {e.poids_kg} kg</span>}
+                  {e.rounds && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><RotateCcw size={10} /> {e.rounds} rnds</span>}
+                  {e.duree_secondes && <span style={{ backgroundColor: '#2a2a2a', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={10} /> {e.duree_secondes} s</span>}
                 </div>
               </div>
             }
@@ -664,7 +665,7 @@ function SeanceDetail({ seance, onBack, onDelete, navigate, primaryColor }) {
       <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}>
         <h3 className="bebas" style={{ margin: '0 0 15px 0', fontSize: '18px' }}>RESSENTI DE LA SÉANCE</h3>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '15px' }}>
-          {[1,2,3,4,5].map(m => { const Icon = EMOJI_MAP[m]; return <button key={m} onClick={() => setMood(m)} style={{ background: mood === m ? 'var(--color-primary)' : '#333', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', transition: 'all 0.2s', transform: mood === m ? 'scale(1.1)' : 'scale(1)', boxShadow: mood === m ? shadow(primaryColor, 0.4) : 'none' }}><Icon size={18} /></button> })}
+          {[1, 2, 3, 4, 5].map(m => { const Icon = EMOJI_MAP[m]; return <button key={m} onClick={() => setMood(m)} style={{ background: mood === m ? 'var(--color-primary)' : '#333', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', transition: 'all 0.2s', transform: mood === m ? 'scale(1.1)' : 'scale(1)', boxShadow: mood === m ? shadow(primaryColor, 0.4) : 'none' }}><Icon size={18} /></button> })}
         </div>
         <textarea className="input-field" placeholder="Notes (ex: sparring dur, bonne technique...)" style={{ minHeight: '60px', fontFamily: 'Inter' }} value={note} onChange={e => setNote(e.target.value)} />
         <button onClick={handleSaveNotes} className="btn-primary" style={{ marginTop: 0 }} disabled={savingNote}>{savingNote ? '...' : 'Sauvegarder Note'}</button>
@@ -674,16 +675,16 @@ function SeanceDetail({ seance, onBack, onDelete, navigate, primaryColor }) {
 }
 
 function EditExerciceForm({ exercice, onSave, onCancel, primaryColor }) {
-  const [formData, setFormData] = useState({ nom: exercice.nom, series: exercice.series||'', repetitions: exercice.repetitions||'', poids_kg: exercice.poids_kg||'', duree_secondes: exercice.duree_secondes||'', rounds: exercice.rounds||'' })
-  const submit = async (e) => { e.preventDefault(); const payload = { ...formData, series: parseInt(formData.series)||null, repetitions: parseInt(formData.repetitions)||null, poids_kg: parseFloat(formData.poids_kg)||null, duree_secondes: parseInt(formData.duree_secondes)||null, rounds: parseInt(formData.rounds)||null }; await supabase.from('exercices').update(payload).eq('id', exercice.id); onSave() }
+  const [formData, setFormData] = useState({ nom: exercice.nom, series: exercice.series || '', repetitions: exercice.repetitions || '', poids_kg: exercice.poids_kg || '', duree_secondes: exercice.duree_secondes || '', rounds: exercice.rounds || '' })
+  const submit = async (e) => { e.preventDefault(); const payload = { ...formData, series: parseInt(formData.series) || null, repetitions: parseInt(formData.repetitions) || null, poids_kg: parseFloat(formData.poids_kg) || null, duree_secondes: parseInt(formData.duree_secondes) || null, rounds: parseInt(formData.rounds) || null }; await supabase.from('exercices').update(payload).eq('id', exercice.id); onSave() }
   return (
     <form onSubmit={submit} style={{ backgroundColor: '#222', padding: '12px', borderRadius: '12px', borderLeft: '3px solid var(--color-primary)', animation: 'slideUp 0.3s' }}>
-      <input className="input-field" style={{ padding: '8px', marginBottom: '10px' }} value={formData.nom} onChange={e=>setFormData({...formData, nom: e.target.value})} required />
+      <input className="input-field" style={{ padding: '8px', marginBottom: '10px' }} value={formData.nom} onChange={e => setFormData({ ...formData, nom: e.target.value })} required />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-        <input type="number" placeholder="Séries" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.series} onChange={e=>setFormData({...formData, series: e.target.value})} />
-        <input type="number" placeholder="Reps" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.repetitions} onChange={e=>setFormData({...formData, repetitions: e.target.value})} />
-        <input type="number" step="0.5" placeholder="Poids" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.poids_kg} onChange={e=>setFormData({...formData, poids_kg: e.target.value})} />
-        <input type="number" placeholder="Rounds" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.rounds} onChange={e=>setFormData({...formData, rounds: e.target.value})} />
+        <input type="number" placeholder="Séries" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.series} onChange={e => setFormData({ ...formData, series: e.target.value })} />
+        <input type="number" placeholder="Reps" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.repetitions} onChange={e => setFormData({ ...formData, repetitions: e.target.value })} />
+        <input type="number" step="0.5" placeholder="Poids" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.poids_kg} onChange={e => setFormData({ ...formData, poids_kg: e.target.value })} />
+        <input type="number" placeholder="Rounds" className="input-field" style={{ padding: '8px', marginBottom: 0 }} value={formData.rounds} onChange={e => setFormData({ ...formData, rounds: e.target.value })} />
       </div>
       <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
         <button type="button" onClick={onCancel} style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #555', color: '#fff', borderRadius: '8px', cursor: 'pointer' }}>Annule</button>
@@ -695,20 +696,20 @@ function EditExerciceForm({ exercice, onSave, onCancel, primaryColor }) {
 
 function AddExercice({ seanceId, onBack }) {
   const [formData, setFormData] = useState({ nom: '', series: '', repetitions: '', poids_kg: '', duree_secondes: '', rounds: '' })
-  const submit = async (e) => { e.preventDefault(); const payload = { seance_id: seanceId, nom: formData.nom, series: parseInt(formData.series)||null, repetitions: parseInt(formData.repetitions)||null, poids_kg: parseFloat(formData.poids_kg)||null, duree_secondes: parseInt(formData.duree_secondes)||null, rounds: parseInt(formData.rounds)||null }; await supabase.from('exercices').insert([payload]); onBack() }
+  const submit = async (e) => { e.preventDefault(); const payload = { seance_id: seanceId, nom: formData.nom, series: parseInt(formData.series) || null, repetitions: parseInt(formData.repetitions) || null, poids_kg: parseFloat(formData.poids_kg) || null, duree_secondes: parseInt(formData.duree_secondes) || null, rounds: parseInt(formData.rounds) || null }; await supabase.from('exercices').insert([payload]); onBack() }
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}><button style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }} onClick={onBack}><ArrowLeft size={24} /></button><h2 className="bebas title-main" style={{ margin: 0 }}>AJOUTER EXERCICE</h2></div>
       <form onSubmit={submit} style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}>
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Nom / Technique</label>
-        <input className="input-field" value={formData.nom} onChange={e=>setFormData({...formData, nom: e.target.value})} required />
+        <input className="input-field" value={formData.nom} onChange={e => setFormData({ ...formData, nom: e.target.value })} required />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Séries</label><input type="number" className="input-field" value={formData.series} onChange={e=>setFormData({...formData, series: e.target.value})} /></div>
-          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Reps</label><input type="number" className="input-field" value={formData.repetitions} onChange={e=>setFormData({...formData, repetitions: e.target.value})} /></div>
-          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Poids (kg)</label><input type="number" step="0.5" className="input-field" value={formData.poids_kg} onChange={e=>setFormData({...formData, poids_kg: e.target.value})} /></div>
-          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Rounds</label><input type="number" className="input-field" value={formData.rounds} onChange={e=>setFormData({...formData, rounds: e.target.value})} /></div>
+          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Séries</label><input type="number" className="input-field" value={formData.series} onChange={e => setFormData({ ...formData, series: e.target.value })} /></div>
+          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Reps</label><input type="number" className="input-field" value={formData.repetitions} onChange={e => setFormData({ ...formData, repetitions: e.target.value })} /></div>
+          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Poids (kg)</label><input type="number" step="0.5" className="input-field" value={formData.poids_kg} onChange={e => setFormData({ ...formData, poids_kg: e.target.value })} /></div>
+          <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: DEFAULT_THEME.textMuted }}>Rounds</label><input type="number" className="input-field" value={formData.rounds} onChange={e => setFormData({ ...formData, rounds: e.target.value })} /></div>
         </div>
-        <button type="submit" className="btn-primary" style={{ marginTop: '10px' }}><Plus size={20}/> Ajouter</button>
+        <button type="submit" className="btn-primary" style={{ marginTop: '10px' }}><Plus size={20} /> Ajouter</button>
       </form>
     </>
   )
@@ -752,7 +753,7 @@ function TimerView() {
     setBellRinging(true)
     const playOnce = () => {
       bellRef.current.currentTime = 0
-      bellRef.current.play().catch(() => {})
+      bellRef.current.play().catch(() => { })
     }
     playOnce()
     // Répéter toutes les 2 secondes
@@ -783,7 +784,7 @@ function TimerView() {
   const [chronoMode, setChronoMode] = useState('chrono')
   const [phase, setPhase] = useState('round')
   const [currentRound, setCurrentRound] = useState(1)
-  const [soundEnabled, setSoundEnabled] = useState(() => 
+  const [soundEnabled, setSoundEnabled] = useState(() =>
     localStorage.getItem('athletik_sound') !== 'false'
   )
   const [roundConfig, setRoundConfig] = useState({
@@ -910,8 +911,8 @@ function TimerView() {
     const secs = Math.floor((ms % 60000) / 1000)
     const cs = Math.floor((ms % 1000) / 10)
     return {
-      main: `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`,
-      sub: `.${String(cs).padStart(2,'0')}`
+      main: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
+      sub: `.${String(cs).padStart(2, '0')}`
     }
   }
 
@@ -922,28 +923,28 @@ function TimerView() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
         <h1 className="bebas title-main" style={{ margin: 0 }}>CHRONOMÈTRE</h1>
         <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ background: 'none', border: 'none', color: soundEnabled ? 'var(--color-primary)' : '#555', cursor: 'pointer' }}>
-          {soundEnabled ? <Volume2 size={24}/> : <VolumeX size={24}/>}
+          {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
         </button>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '25px', overflowX: 'auto', paddingBottom: '10px' }}>
         {['chrono', 'minuteur', 'rounds'].map(mod => (
-          <button key={mod} onClick={() => {setChronoMode(mod); handleReset()}} style={{ padding: '6px 14px', borderRadius: '20px', border: '1px solid var(--color-primary)', background: chronoMode === mod ? 'var(--color-primary)' : 'transparent', color: '#fff', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase' }}>{mod}</button>
+          <button key={mod} onClick={() => { setChronoMode(mod); handleReset() }} style={{ padding: '6px 14px', borderRadius: '20px', border: '1px solid var(--color-primary)', background: chronoMode === mod ? 'var(--color-primary)' : 'transparent', color: '#fff', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase' }}>{mod}</button>
         ))}
-        {chronoMode === 'chrono' && <button onClick={()=>playBeep('countdown')} style={{ padding: '6px 14px', borderRadius: '20px', background: '#333', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px' }}><Bell size={14}/></button>}
+        {chronoMode === 'chrono' && <button onClick={() => playBeep('countdown')} style={{ padding: '6px 14px', borderRadius: '20px', background: '#333', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px' }}><Bell size={14} /></button>}
       </div>
 
       {chronoMode === 'minuteur' && (
         <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'center', gap: '10px', maxWidth: '300px', margin: '0 auto 20px', alignItems: 'center' }}>
-          <label style={{ fontSize: '14px', color: '#999' }}>Durée (min) :</label><input type="number" className="input-field" style={{ width: '80px', marginBottom: 0, padding: '8px', textAlign: 'center' }} value={minuteurMinutes} onChange={e=>setMinuteurMinutes(e.target.value)} disabled={isRunning} />
+          <label style={{ fontSize: '14px', color: '#999' }}>Durée (min) :</label><input type="number" className="input-field" style={{ width: '80px', marginBottom: 0, padding: '8px', textAlign: 'center' }} value={minuteurMinutes} onChange={e => setMinuteurMinutes(e.target.value)} disabled={isRunning} />
         </div>
       )}
 
       {chronoMode === 'rounds' && (
         <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', maxWidth: '400px', margin: '0 auto 20px' }}>
-          <div><label style={{ fontSize: '12px', color: '#999', display: 'block', marginBottom: '5px' }}>Round</label><input type="number" className="input-field" style={{ width: '100%', marginBottom: 0, textAlign: 'center', padding: '8px' }} value={roundConfig.round} onChange={e=>setRoundConfig({...roundConfig, round: e.target.value})} disabled={isRunning} /></div>
-          <div><label style={{ fontSize: '12px', color: '#999', display: 'block', marginBottom: '5px' }}>Repos</label><input type="number" className="input-field" style={{ width: '100%', marginBottom: 0, textAlign: 'center', padding: '8px' }} value={roundConfig.repos} onChange={e=>setRoundConfig({...roundConfig, repos: e.target.value})} disabled={isRunning} /></div>
-          <div><label style={{ fontSize: '12px', color: '#999', display: 'block', marginBottom: '5px' }}>Total</label><input type="number" className="input-field" style={{ width: '100%', marginBottom: 0, textAlign: 'center', padding: '8px' }} value={roundConfig.total} onChange={e=>setRoundConfig({...roundConfig, total: e.target.value})} disabled={isRunning} /></div>
+          <div><label style={{ fontSize: '12px', color: '#999', display: 'block', marginBottom: '5px' }}>Round</label><input type="number" className="input-field" style={{ width: '100%', marginBottom: 0, textAlign: 'center', padding: '8px' }} value={roundConfig.round} onChange={e => setRoundConfig({ ...roundConfig, round: e.target.value })} disabled={isRunning} /></div>
+          <div><label style={{ fontSize: '12px', color: '#999', display: 'block', marginBottom: '5px' }}>Repos</label><input type="number" className="input-field" style={{ width: '100%', marginBottom: 0, textAlign: 'center', padding: '8px' }} value={roundConfig.repos} onChange={e => setRoundConfig({ ...roundConfig, repos: e.target.value })} disabled={isRunning} /></div>
+          <div><label style={{ fontSize: '12px', color: '#999', display: 'block', marginBottom: '5px' }}>Total</label><input type="number" className="input-field" style={{ width: '100%', marginBottom: 0, textAlign: 'center', padding: '8px' }} value={roundConfig.total} onChange={e => setRoundConfig({ ...roundConfig, total: e.target.value })} disabled={isRunning} /></div>
         </div>
       )}
 
@@ -960,11 +961,11 @@ function TimerView() {
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '30px' }}>
         {!isRunning ? (
-          <button onClick={handleStartPause} style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#2dc653', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px rgba(45,198,83,0.4)' }}><Play size={28}/></button>
+          <button onClick={handleStartPause} style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#2dc653', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px rgba(45,198,83,0.4)' }}><Play size={28} /></button>
         ) : (
-          <button onClick={handleStartPause} style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#ff6b35', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px rgba(255,107,53,0.4)' }}><Pause size={28}/></button>
+          <button onClick={handleStartPause} style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#ff6b35', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px rgba(255,107,53,0.4)' }}><Pause size={28} /></button>
         )}
-        <button onClick={handleReset} style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#333', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Square size={22}/></button>
+        <button onClick={handleReset} style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#333', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Square size={22} /></button>
       </div>
 
       {bellRinging && (
@@ -976,11 +977,10 @@ function TimerView() {
         </div>
       )}
     </div>
-    </div>
   )
 }
 
-function Profile({ 
+function Profile({
   profile, seances, badges, onUpdate, primaryColor,
   remindersEnabled, setRemindersEnabled, reminderTime, setReminderTime,
   reminderDays, setReminderDays, requestNotificationPermission
@@ -998,32 +998,32 @@ function Profile({
         <form onSubmit={handleSubmit} style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
             <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#222', border: '2px solid var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: shadow(primaryColor, 0.4) }}><AvatarIcon size={30} color="var(--color-primary)" /></div>
-            <div style={{ flex: 1 }}><input className="input-field" style={{ marginBottom: 0, fontSize: '18px', fontWeight: 'bold' }} placeholder="Pseudo" value={formData.pseudo || ''} onChange={e=>setFormData({...formData, pseudo: e.target.value})} required /></div>
+            <div style={{ flex: 1 }}><input className="input-field" style={{ marginBottom: 0, fontSize: '18px', fontWeight: 'bold' }} placeholder="Pseudo" value={formData.pseudo || ''} onChange={e => setFormData({ ...formData, pseudo: e.target.value })} required /></div>
           </div>
           <label style={{ display: 'block', margin: '15px 0 10px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Avatar</label>
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px' }}>
-            {Object.keys(ICONS_MAP).map(key => { const Icon = ICONS_MAP[key]; const sel = formData.avatar === key; return <div key={key} onClick={()=>setFormData({...formData, avatar: key})} style={{ padding: '8px', borderRadius: '8px', backgroundColor: sel ? 'var(--color-primary)' : '#333', cursor: 'pointer', transition: '0.2s', minWidth: '40px', display: 'flex', justifyContent: 'center' }}><Icon size={20} color={sel ? '#fff' : '#aaa'} /></div> })}
+            {Object.keys(ICONS_MAP).map(key => { const Icon = ICONS_MAP[key]; const sel = formData.avatar === key; return <div key={key} onClick={() => setFormData({ ...formData, avatar: key })} style={{ padding: '8px', borderRadius: '8px', backgroundColor: sel ? 'var(--color-primary)' : '#333', cursor: 'pointer', transition: '0.2s', minWidth: '40px', display: 'flex', justifyContent: 'center' }}><Icon size={20} color={sel ? '#fff' : '#aaa'} /></div> })}
           </div>
           <label style={{ display: 'block', margin: '15px 0 10px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Couleur Principale</label>
           <div style={{ display: 'flex', gap: '12px' }}>
-            {COLORS_MAP.map(c => <div key={c} onClick={()=>setFormData({...formData, couleur_principale: c})} style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: c, border: formData.couleur_principale === c ? '2px solid #fff' : '2px solid transparent', cursor: 'pointer', transform: formData.couleur_principale === c ? 'scale(1.15)' : 'scale(1)', transition: '0.2s', boxShadow: formData.couleur_principale === c ? shadow(c, 0.6) : 'none' }} />)}
+            {COLORS_MAP.map(c => <div key={c} onClick={() => setFormData({ ...formData, couleur_principale: c })} style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: c, border: formData.couleur_principale === c ? '2px solid #fff' : '2px solid transparent', cursor: 'pointer', transform: formData.couleur_principale === c ? 'scale(1.15)' : 'scale(1)', transition: '0.2s', boxShadow: formData.couleur_principale === c ? shadow(c, 0.6) : 'none' }} />)}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '20px' }}>
-             <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Sport Principal</label><select className="input-field" style={{ padding: '10px' }} value={formData.sport_principal||''} onChange={e=>setFormData({...formData, sport_principal: e.target.value})}><option value="">-</option>{sports.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
-             <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Niveau</label><select className="input-field" style={{ padding: '10px' }} value={formData.niveau||''} onChange={e=>setFormData({...formData, niveau: e.target.value})}><option value="">-</option>{niveaux.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
-             <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Âge</label><input type="number" className="input-field" style={{ padding: '10px' }} value={formData.age||''} onChange={e=>setFormData({...formData, age: e.target.value})} /></div>
-             <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Poids (kg)</label><input type="number" className="input-field" style={{ padding: '10px' }} value={formData.poids||''} onChange={e=>setFormData({...formData, poids: e.target.value})} /></div>
+            <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Sport Principal</label><select className="input-field" style={{ padding: '10px' }} value={formData.sport_principal || ''} onChange={e => setFormData({ ...formData, sport_principal: e.target.value })}><option value="">-</option>{sports.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Niveau</label><select className="input-field" style={{ padding: '10px' }} value={formData.niveau || ''} onChange={e => setFormData({ ...formData, niveau: e.target.value })}><option value="">-</option>{niveaux.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Âge</label><input type="number" className="input-field" style={{ padding: '10px' }} value={formData.age || ''} onChange={e => setFormData({ ...formData, age: e.target.value })} /></div>
+            <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: DEFAULT_THEME.textMuted }}>Poids (kg)</label><input type="number" className="input-field" style={{ padding: '10px' }} value={formData.poids || ''} onChange={e => setFormData({ ...formData, poids: e.target.value })} /></div>
           </div>
           <button type="submit" className="btn-primary" style={{ marginTop: '15px' }} disabled={saving}>{saving ? '...' : 'Sauvegarder'}</button>
         </form>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}><h3 className="bebas" style={{ margin: '0 0 15px 0', fontSize: '20px' }}>MES BADGES</h3><div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>{badges.length === 0 ? <p style={{ color: DEFAULT_THEME.textMuted, fontSize: '13px', margin: 0 }}>Aucun badge.</p> : badges.map(b => <div key={b} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', backgroundColor: '#333', padding: '10px', borderRadius: '10px', width: '70px', boxShadow: shadow(primaryColor, 0.2) }}><Medal size={24} color="var(--color-primary)" /><span style={{ fontSize: '10px', fontWeight: 'bold', textAlign: 'center' }}>{b}</span></div>)}</div></div>
           <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px' }}><h3 className="bebas" style={{ margin: '0 0 15px 0', fontSize: '20px' }}>STATS EXPRESS</h3><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #333', fontSize: '14px' }}><span>Séances</span><strong>{seances.length}</strong></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #333', fontSize: '14px' }}><span>Minutes</span><strong>{seances.reduce((acc, s) => acc + s.duree_minutes, 0)}</strong></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px' }}><span>Streak max (est.)</span><strong>{badges.includes("Régularité") ? "7 jrs" : "1 jr"}</strong></div></div>
-          
+
           <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h3 className="bebas" style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}><Bell size={20} color="var(--color-primary)" /> RAPPELS</h3>
-              <div 
+              <div
                 onClick={async () => {
                   const val = !remindersEnabled
                   if (val) {
@@ -1032,7 +1032,7 @@ function Profile({
                   }
                   setRemindersEnabled(val)
                   localStorage.setItem('athletik_reminders', val)
-                }} 
+                }}
                 style={{ width: '40px', height: '22px', backgroundColor: remindersEnabled ? 'var(--color-primary)' : '#333', borderRadius: '11px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}
               >
                 <div style={{ width: '16px', height: '16px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: remindersEnabled ? '21px' : '3px', transition: '0.3s shadow, 0.3s left' }} />
@@ -1041,20 +1041,20 @@ function Profile({
             {remindersEnabled && (
               <div style={{ animation: 'fadeInUp 0.3s' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: DEFAULT_THEME.textMuted }}>Heure de rappel</label>
-                <input 
-                  type="time" 
-                  value={reminderTime} 
-                  onChange={e => { setReminderTime(e.target.value); localStorage.setItem('athletik_reminder_time', e.target.value) }} 
-                  className="input-field" 
-                  style={{ padding: '8px', marginBottom: '15px' }} 
+                <input
+                  type="time"
+                  value={reminderTime}
+                  onChange={e => { setReminderTime(e.target.value); localStorage.setItem('athletik_reminder_time', e.target.value) }}
+                  className="input-field"
+                  style={{ padding: '8px', marginBottom: '15px' }}
                 />
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: DEFAULT_THEME.textMuted }}>Jours sélectionnés</label>
                 <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>
-                  {['D','L','M','M','J','V','S'].map((d, i) => {
+                  {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d, i) => {
                     const sel = reminderDays.includes(i)
                     return (
-                      <button 
-                        key={i} 
+                      <button
+                        key={i}
                         type="button"
                         onClick={() => {
                           const newDays = sel ? reminderDays.filter(day => day !== i) : [...reminderDays, i]
@@ -1068,14 +1068,14 @@ function Profile({
                     )
                   })}
                 </div>
-                <button 
+                <button
                   type="button"
                   onClick={() => {
-                   if (Notification.permission === 'granted') {
+                    if (Notification.permission === 'granted') {
                       new Notification('Athlétik 💪', { body: 'C\'est l\'heure de t\'entraîner !', icon: '/icon.svg', badge: '/icon.svg' })
-                   } else {
+                    } else {
                       alert('Veuillez autoriser les notifications dans votre navigateur.')
-                   }
+                    }
                   }}
                   style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid #333', color: '#fff', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
                 >
@@ -1087,7 +1087,7 @@ function Profile({
         </div>
       </div>
 
-      <button 
+      <button
         onClick={() => supabase.auth.signOut()}
         style={{
           width: '100%',
@@ -1134,8 +1134,8 @@ function Stats({ seances }) {
         </div>
         <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <h3 className="bebas" style={{ margin: '0 0 5px 0', fontSize: '20px' }}>RECORDS</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><div style={{ padding: '10px', background: '#3a86ff22', borderRadius: '10px', color: '#3a86ff' }}><Target size={24}/></div><div><div style={{ fontSize: '12px', color: '#999' }}>Plus longue séance</div><div style={{ fontSize: '18px', fontWeight: 'bold' }}>{Math.max(...seances.map(s => s.duree_minutes))} min</div></div></div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><div style={{ padding: '10px', background: '#ff6b3522', borderRadius: '10px', color: '#ff6b35' }}><Zap size={24}/></div><div><div style={{ fontSize: '12px', color: '#999' }}>Calories estimées</div><div style={{ fontSize: '18px', fontWeight: 'bold' }}>{~~(seances.reduce((acc, s)=>acc+s.duree_minutes, 0) * 12)} kcal</div></div></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><div style={{ padding: '10px', background: '#3a86ff22', borderRadius: '10px', color: '#3a86ff' }}><Target size={24} /></div><div><div style={{ fontSize: '12px', color: '#999' }}>Plus longue séance</div><div style={{ fontSize: '18px', fontWeight: 'bold' }}>{Math.max(...seances.map(s => s.duree_minutes))} min</div></div></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><div style={{ padding: '10px', background: '#ff6b3522', borderRadius: '10px', color: '#ff6b35' }}><Zap size={24} /></div><div><div style={{ fontSize: '12px', color: '#999' }}>Calories estimées</div><div style={{ fontSize: '18px', fontWeight: 'bold' }}>{~~(seances.reduce((acc, s) => acc + s.duree_minutes, 0) * 12)} kcal</div></div></div>
         </div>
       </div>
     </div>
@@ -1144,12 +1144,12 @@ function Stats({ seances }) {
 
 function ActiveSession({ seance, onFinish, primaryColor }) {
   const [exercices, setExercices] = useState([]); const [currentIndex, setCurrentIndex] = useState(0)
-  useEffect(() => { supabase.from('exercices').select('*').eq('seance_id', seance.id).order('created_at').then(({data}) => { if (data) setExercices(data) }) }, [seance.id])
-  if (exercices.length === 0) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Chargement... <br/><button onClick={onFinish} className="btn-primary" style={{marginTop: '20px'}}>Retour</button></div>
+  useEffect(() => { supabase.from('exercices').select('*').eq('seance_id', seance.id).order('created_at').then(({ data }) => { if (data) setExercices(data) }) }, [seance.id])
+  if (exercices.length === 0) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Chargement... <br /><button onClick={onFinish} className="btn-primary" style={{ marginTop: '20px' }}>Retour</button></div>
   const ex = exercices[currentIndex]; const isLast = currentIndex === exercices.length - 1
   return (
     <div style={{ animation: 'fadeIn 0.5s' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}><h2 className="bebas" style={{ margin: 0, fontSize: '22px', display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{width:'12px', height:'12px', borderRadius:'50%', background:'var(--color-primary)', animation:'pulseTimer 1s infinite'}}/> SÉANCE EN COURS</h2><span style={{ fontSize: '14px', fontWeight: 'bold', color: '#aaa' }}>{currentIndex + 1} / {exercices.length}</span></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}><h2 className="bebas" style={{ margin: 0, fontSize: '22px', display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--color-primary)', animation: 'pulseTimer 1s infinite' }} /> SÉANCE EN COURS</h2><span style={{ fontSize: '14px', fontWeight: 'bold', color: '#aaa' }}>{currentIndex + 1} / {exercices.length}</span></div>
       <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '30px 20px', borderRadius: '16px', textAlign: 'center', boxShadow: shadow(primaryColor, 0.4), border: '2px solid var(--color-primary)' }}>
         <h1 className="bebas" style={{ fontSize: '36px', margin: '0 0 20px 0' }}>{ex.nom}</h1>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -1160,8 +1160,8 @@ function ActiveSession({ seance, onFinish, primaryColor }) {
         </div>
       </div>
       <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-        {currentIndex > 0 && <button onClick={() => setCurrentIndex(c=>c-1)} style={{ flex: 0.3, padding: '14px', background: '#333', border: 'none', color: '#fff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Précédent</button>}
-        <button onClick={() => isLast ? onFinish() : setCurrentIndex(c=>c+1)} style={{ flex: 1, padding: '14px', background: 'var(--color-primary)', border: 'none', color: '#fff', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: shadow(primaryColor, 0.4) }}>{isLast ? "Terminer !" : "Suivant"}</button>
+        {currentIndex > 0 && <button onClick={() => setCurrentIndex(c => c - 1)} style={{ flex: 0.3, padding: '14px', background: '#333', border: 'none', color: '#fff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Précédent</button>}
+        <button onClick={() => isLast ? onFinish() : setCurrentIndex(c => c + 1)} style={{ flex: 1, padding: '14px', background: 'var(--color-primary)', border: 'none', color: '#fff', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: shadow(primaryColor, 0.4) }}>{isLast ? "Terminer !" : "Suivant"}</button>
       </div>
     </div>
   )
@@ -1173,10 +1173,10 @@ function Onboarding({ onClose, pseudo }) {
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div style={{ backgroundColor: DEFAULT_THEME.card, padding: '25px', borderRadius: '16px', maxWidth: '350px', width: '100%', animation: 'slideUp 0.5s ease-out' }}>
-        <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>{[1,2,3,4].map(i => <div key={i} style={{ flex: 1, height: '4px', backgroundColor: i <= step ? 'var(--color-primary)' : '#333', borderRadius: '2px', transition: 'background-color 0.3s' }} />)}</div>
-        <h2 style={{ fontSize: '20px', margin: '0 0 10px 0' }}>{steps[step-1].title}</h2><p style={{ color: DEFAULT_THEME.textMuted, fontSize: '14px', lineHeight: '1.4', marginBottom: '25px' }}>{steps[step-1].text}</p>
+        <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>{[1, 2, 3, 4].map(i => <div key={i} style={{ flex: 1, height: '4px', backgroundColor: i <= step ? 'var(--color-primary)' : '#333', borderRadius: '2px', transition: 'background-color 0.3s' }} />)}</div>
+        <h2 style={{ fontSize: '20px', margin: '0 0 10px 0' }}>{steps[step - 1].title}</h2><p style={{ color: DEFAULT_THEME.textMuted, fontSize: '14px', lineHeight: '1.4', marginBottom: '25px' }}>{steps[step - 1].text}</p>
         <div style={{ display: 'flex', gap: '10px' }}>
-          {step < 4 ? <><button onClick={onClose} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: '8px', cursor: 'pointer' }}>Passer</button><button onClick={() => setStep(s=>s+1)} style={{ flex: 1, padding: '10px', background: 'var(--color-primary)', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Suivant</button></> : <button onClick={onClose} style={{ width: '100%', padding: '12px', background: 'var(--color-primary)', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>C'est parti !</button>}
+          {step < 4 ? <><button onClick={onClose} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid #333', color: '#fff', borderRadius: '8px', cursor: 'pointer' }}>Passer</button><button onClick={() => setStep(s => s + 1)} style={{ flex: 1, padding: '10px', background: 'var(--color-primary)', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Suivant</button></> : <button onClick={onClose} style={{ width: '100%', padding: '12px', background: 'var(--color-primary)', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>C'est parti !</button>}
         </div>
       </div>
     </div>
